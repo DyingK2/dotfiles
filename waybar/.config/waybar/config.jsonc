@@ -13,6 +13,7 @@
   "modules-center": [],
   "modules-right": [
     "wireplumber",
+    "battery",
     "clock",
     "tray"
   ],
@@ -40,6 +41,15 @@
     "on-click": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
     "on-click-right": "pavucontrol",
     "tooltip-format": "{node_name}"
+  },
+  "battery": {
+    "interval": 30,
+    "states": { "warning": 30, "critical": 15 },
+    "format": "{icon} {capacity}%",
+    "format-charging": "󰂄 {capacity}%",
+    "format-plugged": "󰚥 {capacity}%",
+    "format-icons": ["󰂎", "󰁺", "󰁼", "󰁾", "󰂀", "󰂂", "󰁹"],
+    "tooltip-format": "{capacity}% · {timeTo}"
   },
   "clock": {
     "interval": 1,

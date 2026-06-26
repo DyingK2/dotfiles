@@ -27,6 +27,7 @@ window#waybar {
 #cpu,
 #window,
 #wireplumber,
+#battery,
 #clock,
 #tray {
   background: @surface;
@@ -71,6 +72,10 @@ window#waybar {
 #window          { color: @subtle; }
 #wireplumber.muted { color: @subtle; }
 #clock           { color: @accent; }
+
+#battery.charging { color: #9ece6a; }
+#battery.warning:not(.charging)  { color: #ffc87f; }
+#battery.critical:not(.charging) { color: #f7768e; }
 
 /* hide the window pill entirely when no window is focused (no empty bubble) */
 #window.empty {
