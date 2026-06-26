@@ -1,0 +1,80 @@
+/* DankMaterialShell-flavored: floating rounded "island" pills, Material dark
+   surface, niri blue (#7fc8ff) accent, Maple Mono NF CN. */
+
+@define-color surface  rgba(28, 31, 38, 0.88);
+@define-color text     #d8dee9;
+@define-color subtle   #8b93a1;
+@define-color accent   #7fc8ff;
+@define-color urgent   #9b0000;
+
+* {
+  font-family: "Maple Mono NF CN";
+  font-size: 12px;
+  min-height: 0;
+  border: none;
+  box-shadow: none;
+  text-shadow: none;
+}
+
+/* whole bar stays transparent — the empty gaps between pills show through */
+window#waybar {
+  background: transparent;
+  color: @text;
+}
+
+/* every module is its own floating rounded pill (the DMS look) */
+#workspaces,
+#cpu,
+#window,
+#wireplumber,
+#clock,
+#tray {
+  background: @surface;
+  border-radius: 12px;
+  padding: 0 12px;
+  margin: 2px 3px;
+  color: @text;
+}
+
+/* keep outer edges tucked in */
+#workspaces { margin-left: 6px; }
+#tray       { margin-right: 6px; }
+
+/* ---- workspaces: filled accent pill for the active one ---- */
+#workspaces {
+  padding: 0 4px;
+}
+#workspaces button {
+  padding: 0 8px;
+  margin: 3px 2px;
+  border-radius: 9px;
+  color: @subtle;
+  background: transparent;
+}
+#workspaces button.active,
+#workspaces button.focused {
+  color: #1c1f26;
+  background: @accent;
+  font-weight: bold;
+}
+#workspaces button.urgent {
+  color: #ffffff;
+  background: @urgent;
+}
+#workspaces button:hover {
+  color: @text;
+  background: rgba(255, 255, 255, 0.10);
+}
+
+/* ---- accents / states ---- */
+#cpu.high        { color: #ffc87f; }
+#window          { color: @subtle; }
+#wireplumber.muted { color: @subtle; }
+#clock           { color: @accent; }
+
+/* hide the window pill entirely when no window is focused (no empty bubble) */
+#window.empty {
+  background: transparent;
+  padding: 0;
+  margin: 0;
+}
