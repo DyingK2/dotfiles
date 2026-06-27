@@ -1,0 +1,20 @@
+#!/bin/sh
+# fz-power — fuzzel --dmenu 会话菜单。取消(Esc)即 no-op。
+set -eu
+
+chosen=$(printf '%s\n' \
+    '󰌾  Lock' \
+    '󰍃  Logout' \
+    '󰏥  Suspend' \
+    '󰜉  Reboot' \
+    '󰐥  Poweroff' \
+    | fuzzel --dmenu --prompt='session ' --lines=5 --width=20) || exit 0
+
+case "$chosen" in
+    *Lock)     exec swaylock ;;
+    *Logout)   exec niri msg action quit ;;
+    *Suspend)  exec systemctl suspend ;;
+    *Reboot)   exec systemctl reboot ;;
+    *Poweroff) exec systemctl poweroff ;;
+    *)         exit 0 ;;
+esac
