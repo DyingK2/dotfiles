@@ -681,7 +681,7 @@ binds {
     Mod+Escape allow-inhibiting=false { toggle-keyboard-shortcuts-inhibit; }
 
     // The quit action will show a confirmation dialog to avoid accidental exits.
-    Mod+Shift+E { quit; }
+    Mod+Shift+E hotkey-overlay-title="Session menu: fuzzel" { spawn "sh" "-c" "exec ~/.config/fuzzel/scripts/fz-power"; }
     Ctrl+Alt+Delete { quit; }
 
     // Powers off the monitors. To turn them back on, do any input like
