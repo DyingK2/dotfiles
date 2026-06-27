@@ -11,7 +11,10 @@
     "cpu",
     "niri/window"
   ],
-  "modules-center": [],
+  "modules-center": [
+    "custom/tasks",
+    "mpris"
+  ],
   "modules-right": [
     "wireplumber",
     "battery",
@@ -63,5 +66,22 @@
   "tray": {
     "icon-size": 16,
     "spacing": 8
+  },
+  "mpris": {
+    "format": "{player_icon} {dynamic}",
+    "format-paused": "{status_icon} {dynamic}",
+    "dynamic-len": 35,
+    "dynamic-order": ["title", "artist"],
+    "player-icons": { "default": "" },
+    "status-icons": { "paused": "" },
+    "tooltip-format": "{player} · {status}"
+  },
+  "custom/tasks": {
+    "exec": "~/.config/waybar/scripts/tasks.sh",
+    "return-type": "json",
+    "interval": 30,
+    "format": "{}",
+    "on-click": "xdg-open https://ticktick.com",
+    "tooltip": false
   }
 }
