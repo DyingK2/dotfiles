@@ -77,9 +77,9 @@
     "tooltip-format": "{player} · {status}"
   },
   "custom/tasks": {
-    "exec": "~/.config/waybar/scripts/tasks.sh",
+    "exec": "~/.config/waybar/scripts/ticktick-pill.py",
     "return-type": "json",
-    "interval": 30,
+    "interval": 300,
     "format": "{}",
     "on-click": "xdg-open https://ticktick.com",
     "tooltip": false
