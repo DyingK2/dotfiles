@@ -29,7 +29,9 @@ window#waybar {
 #wireplumber,
 #battery,
 #clock,
-#tray {
+#tray,
+#custom-tasks,
+#mpris {
   background: @surface;
   border-radius: 12px;
   padding: 0 12px;
@@ -83,3 +85,14 @@ window#waybar {
   padding: 0;
   margin: 0;
 }
+
+/* ---- center: 任务 pill 无主线时整体隐藏（仿 #window.empty） ---- */
+#custom-tasks:not(.has-task) {
+  background: transparent;
+  padding: 0;
+  margin: 0;
+}
+
+/* ---- center: 媒体 pill 柔和强调；无播放器时 waybar 自动隐藏空模块 ---- */
+#mpris         { color: #c8a8ff; }
+#mpris.paused  { color: @subtle; }
