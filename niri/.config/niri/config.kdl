@@ -23,6 +23,10 @@ input {
 
         // Enable numlock on startup, omitting this setting disables it.
         numlock
+
+        // Snappier key repeat than the 600ms/25Hz default.
+        repeat-delay 300
+        repeat-rate 50
     }
 
     // Next sections include libinput settings.
@@ -317,7 +321,7 @@ spawn-sh-at-startup "swaybg -i ~/.config/niri/wallpaper.jpg -m fill"
 
 hotkey-overlay {
     // Uncomment this line to disable the "Important Hotkeys" pop-up at startup.
-    // skip-at-startup
+    skip-at-startup
 }
 
 // Uncomment this line to ask the clients to omit their client-side decorations if possible.
@@ -690,4 +694,6 @@ environment {
 	XMODIFIERS "@im=fcitx"
 	SDL_IM_MODULE "fcitx"
 	GLFW_IM_MODULE "ibus"
+	// Let Electron/Chromium apps render natively on Wayland (crisp on HiDPI).
+	ELECTRON_OZONE_PLATFORM_HINT "auto"
 }
