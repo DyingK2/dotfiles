@@ -1,4 +1,4 @@
-#!/usr/bin/env -S uv run --no-project python3
+#!/usr/bin/env python3
 """waybar custom/tasks reader — 今日主线 pill, live from TickTick Open API.
 
 waybar runs this on an interval. Online: fetch projects, pick today's main

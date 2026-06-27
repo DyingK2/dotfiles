@@ -1,4 +1,4 @@
-#!/usr/bin/env -S uv run --no-project python3
+#!/usr/bin/env python3
 """One-time TickTick OAuth helper for the waybar 今日主线 pill.
 
 Registers nothing — you create the app at https://developer.ticktick.com/manage
