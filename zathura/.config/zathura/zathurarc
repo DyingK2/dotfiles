@@ -4,6 +4,9 @@
 # ── 字体 ──
 set font "Maple Mono NF CN 11"
 
+# ── 键位：r 切重着色（zathura 默认 r=旋转、^r=recolor；纯阅读器旋转无用，让位给一键暗色）──
+map r recolor
+
 # ── 阅读体验 ──
 set selection-clipboard clipboard   # 选中文本 y 直接进 Wayland 剪贴板
 set adjust-open width                # 打开即按页宽自适应
