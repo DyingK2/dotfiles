@@ -1,0 +1,48 @@
+# zathura —— 日常 PDF 阅读器（Tokyo Night，沿用 kitty/waybar/fuzzel 全栈配色）
+# 真相唯一在 dotfiles；纯阅读器，键位保持 zathura vim 默认。
+
+# ── 字体 ──
+set font "Maple Mono NF CN 11"
+
+# ── 阅读体验 ──
+set selection-clipboard clipboard   # 选中文本 y 直接进 Wayland 剪贴板
+set adjust-open width                # 打开即按页宽自适应
+set window-title-basename true       # 标题只显文件名
+set statusbar-home-tilde true        # 路径里 $HOME 显示为 ~
+set incremental-search true          # 边输边搜
+set page-padding 1
+set guioptions "sv"                  # 状态栏 + 竖滚动条；隐藏横滚动条与常驻命令行
+
+# ── 重着色：默认原色（图表/扫描件保真），r 切到调好的暗色 ──
+set recolor false
+set recolor-keephue true             # 暗色模式下彩色图表保留色相、不压成单色
+set recolor-lightcolor "#1a1b26"     # 纸 → Tokyo Night 暗底
+set recolor-darkcolor  "#c0caf5"     # 墨 → 亮字
+
+# ── Tokyo Night 配色 ──
+set default-bg              "#1a1b26"
+set default-fg              "#c0caf5"
+set statusbar-bg           "#1a1b26"
+set statusbar-fg           "#c0caf5"
+set inputbar-bg            "#1a1b26"
+set inputbar-fg           "#c0caf5"
+set notification-bg        "#1a1b26"
+set notification-fg        "#c0caf5"
+set notification-error-bg  "#1a1b26"
+set notification-error-fg  "#f7768e"
+set notification-warning-bg "#1a1b26"
+set notification-warning-fg "#e0af68"
+set highlight-color        "#e0af68"  # 搜索高亮（黄）
+set highlight-active-color "#ff9e64"  # 当前命中（橙）
+set completion-bg          "#1a1b26"
+set completion-fg          "#c0caf5"
+set completion-group-bg    "#1a1b26"
+set completion-group-fg    "#7aa2f7"
+set completion-highlight-bg "#283457"
+set completion-highlight-fg "#c0caf5"
+set index-bg               "#1a1b26"
+set index-fg               "#c0caf5"
+set index-active-bg        "#283457"
+set index-active-fg        "#c0caf5"
+set render-loading-bg      "#1a1b26"
+set render-loading-fg      "#c0caf5"
