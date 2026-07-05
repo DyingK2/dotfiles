@@ -1,0 +1,53 @@
+#!/bin/sh
+# osd — run a volume/brightness action and show a mako progress toast.
+# Called by niri media-key binds. Single replacing slot via the synchronous
+# hint; styled by mako's [category=osd] block. Reusable composable primitive.
+set -eu
+
+SINK="@DEFAULT_AUDIO_SINK@"
+SOURCE="@DEFAULT_AUDIO_SOURCE@"
+
+notify() {
+    # $1 = summary, $2 = value 0-100 (optional, drives the progress bar)
+    if [ -n "${2:-}" ]; then
+        notify-send -a osd -c osd -t 1000 \
+            -h "string:x-canonical-private-synchronous:osd" \
+            -h "int:value:$2" "$1"
+    else
+        notify-send -a osd -c osd -t 1000 \
+            -h "string:x-canonical-private-synchronous:osd" "$1"
+    fi
+}
+
+case "${1:-}" in
+    vol-up)   wpctl set-volume "$SINK" 0.1+ -l 1.0 ;;
+    vol-down) wpctl set-volume "$SINK" 0.1- ;;
+    vol-mute) wpctl set-mute  "$SINK" toggle ;;
+    mic-mute) wpctl set-mute  "$SOURCE" toggle ;;
+    bright-up)
+        command -v brightnessctl >/dev/null || exit 0
+        brightnessctl --class=backlight set +10% >/dev/null ;;
+    bright-down)
+        command -v brightnessctl >/dev/null || exit 0
+        brightnessctl --class=backlight set 10%- >/dev/null ;;
+    *) echo "usage: osd {vol-up|vol-down|vol-mute|mic-mute|bright-up|bright-down}" >&2; exit 2 ;;
+esac
+
+case "$1" in
+    vol-up|vol-down|vol-mute)
+        out="$(wpctl get-volume "$SINK")"            # e.g. "Volume: 0.45 [MUTED]"
+        val="${out#Volume: }"; val="${val%% *}"       # "0.45"
+        pct="$(awk -v v="$val" 'BEGIN{printf "%d", v*100+0.5}')"
+        case "$out" in
+            *MUTED*) notify "🔇 静音" "$pct" ;;
+            *)       notify "🔊 ${pct}%" "$pct" ;;
+        esac ;;
+    mic-mute)
+        case "$(wpctl get-volume "$SOURCE")" in
+            *MUTED*) notify "🎙 麦静音" ;;
+            *)       notify "🎙 麦开启" ;;
+        esac ;;
+    bright-up|bright-down)
+        pct="$(awk -v c="$(brightnessctl get)" -v m="$(brightnessctl max)" 'BEGIN{printf "%d", c*100/m+0.5}')"
+        notify "🔆 ${pct}%" "$pct" ;;
+esac
