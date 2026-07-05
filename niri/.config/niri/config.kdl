@@ -313,7 +313,8 @@ layout {
 spawn-at-startup "fcitx5" "-d"
 spawn-at-startup "/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1"
 spawn-at-startup "waybar"
-spawn-at-startup "brightnessctl" "set" "30%"
+spawn-at-startup "mako"
+spawn-sh-at-startup "command -v brightnessctl >/dev/null && brightnessctl set 30%"
 spawn-sh-at-startup "swaybg -i ~/.config/niri/wallpaper.jpg -m fill"
 
 // To run a shell command (with variables, pipes, etc.), use spawn-sh-at-startup:
@@ -438,10 +439,10 @@ binds {
     // The allow-when-locked=true property makes them work even when the session is locked.
     // Using spawn-sh allows to pass multiple arguments together with the command.
     // "-l 1.0" limits the volume to 100%.
-    XF86AudioRaiseVolume allow-when-locked=true { spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.1+ -l 1.0"; }
-    XF86AudioLowerVolume allow-when-locked=true { spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.1-"; }
-    XF86AudioMute        allow-when-locked=true { spawn-sh "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"; }
-    XF86AudioMicMute     allow-when-locked=true { spawn-sh "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"; }
+    XF86AudioRaiseVolume  allow-when-locked=true { spawn "osd" "vol-up"; }
+    XF86AudioLowerVolume  allow-when-locked=true { spawn "osd" "vol-down"; }
+    XF86AudioMute         allow-when-locked=true { spawn "osd" "vol-mute"; }
+    XF86AudioMicMute      allow-when-locked=true { spawn "osd" "mic-mute"; }
 
     // Example media keys mapping using playerctl.
     // This will work with any MPRIS-enabled media player.
@@ -453,8 +454,13 @@ binds {
     // Example brightness key mappings for brightnessctl.
     // You can use regular spawn with multiple arguments too (to avoid going through "sh"),
     // but you need to manually put each argument in separate "" quotes.
-    XF86MonBrightnessUp allow-when-locked=true { spawn "brightnessctl" "--class=backlight" "set" "+10%"; }
-    XF86MonBrightnessDown allow-when-locked=true { spawn "brightnessctl" "--class=backlight" "set" "10%-"; }
+    XF86MonBrightnessUp   allow-when-locked=true { spawn "osd" "bright-up"; }
+    XF86MonBrightnessDown allow-when-locked=true { spawn "osd" "bright-down"; }
+
+    // 通知管理 (mako)。N 系原先全空、零冲突。
+    Mod+N       hotkey-overlay-title="清空通知: mako" { spawn "makoctl" "dismiss" "-a"; }
+    Mod+Shift+N hotkey-overlay-title="免打扰开关: mako" { spawn "makoctl" "mode" "-t" "do-not-disturb"; }
+    Mod+Ctrl+N  hotkey-overlay-title="找回通知: mako" { spawn "makoctl" "restore"; }
 
     // Open/close the Overview: a zoomed-out view of workspaces and windows.
     // You can also move the mouse into the top-left hot corner,
