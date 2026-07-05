@@ -1,0 +1,27 @@
+# mako — Tokyo Night notifications (matches kitty/waybar/zathura/fuzzel stack)
+font=Maple Mono NF CN 11
+background-color=#1a1b26f0
+text-color=#c0caf5
+border-color=#7aa2f7
+progress-color=over #7aa2f733
+border-size=2
+border-radius=6
+padding=8
+margin=8
+default-timeout=5000
+anchor=top-right
+max-visible=5
+
+[urgency=low]
+border-color=#414868
+
+[urgency=critical]
+border-color=#f7768e
+default-timeout=0
+
+[category=osd]
+default-timeout=1000
+history=0
+
+[mode=do-not-disturb]
+invisible=1
