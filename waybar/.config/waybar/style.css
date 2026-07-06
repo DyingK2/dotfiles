@@ -81,6 +81,10 @@ window#waybar {
 #network.disconnected  { color: #f7768e; }
 #custom-tailscale.down { color: #f7768e; }
 
+/* 󰖂(nf-md-vpn)是 NF(非 Mono)图标,ink 右溢出 advance 框 ~3.8px;在线时是光杆
+   图标故右偏可见。左减右加补偿把它推回视觉居中(左10右14,总宽仍≈别的格12/12)。 */
+#custom-tailscale { padding: 0 14px 0 10px; }
+
 #battery.charging { color: #9ece6a; }
 #battery.warning:not(.charging)  { color: #ffc87f; }
 #battery.critical:not(.charging) { color: #f7768e; }
