@@ -16,6 +16,8 @@
     "mpris"
   ],
   "modules-right": [
+    "network",
+    "custom/tailscale",
     "wireplumber",
     "battery",
     "clock",
@@ -83,5 +85,23 @@
     "format": "{}",
     "on-click": "xdg-open https://ticktick.com",
     "tooltip": false
+  },
+  "network": {
+    "interval": 5,
+    "format-wifi": "  {essid}",
+    "format-ethernet": "󰈀 有线",
+    "format-disconnected": "󰤭 断网",
+    "tooltip-format-wifi": "{essid} · {signalStrength}% · {ipaddr}",
+    "tooltip-format-ethernet": "{ifname} · {ipaddr}",
+    "tooltip-format-disconnected": "无网络连接",
+    "on-click": "kitty -e nmtui"
+  },
+  "custom/tailscale": {
+    "exec": "~/.config/waybar/scripts/tailscale-pill.py",
+    "return-type": "json",
+    "interval": 10,
+    "format": "{}",
+    "on-click": "kitty -e sh -c 'tailscale status; echo; read -p \"[enter] 关闭\"'",
+    "tooltip": true
   }
 }

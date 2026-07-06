@@ -26,6 +26,8 @@ window#waybar {
 #workspaces,
 #cpu,
 #window,
+#network,
+#custom-tailscale,
 #wireplumber,
 #battery,
 #clock,
@@ -74,6 +76,10 @@ window#waybar {
 #window          { color: @subtle; }
 #wireplumber.muted { color: @subtle; }
 #clock           { color: @accent; }
+
+/* 网络:健康时安静(常态色),断线才变红——坏了一眼看见 */
+#network.disconnected  { color: #f7768e; }
+#custom-tailscale.down { color: #f7768e; }
 
 #battery.charging { color: #9ece6a; }
 #battery.warning:not(.charging)  { color: #ffc87f; }
