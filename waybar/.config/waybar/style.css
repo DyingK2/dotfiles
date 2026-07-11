@@ -87,6 +87,10 @@ window#waybar {
    图标故右偏可见。左减右加补偿把它推回视觉居中(左10右14,总宽仍≈别的格12/12)。 */
 #custom-tailscale { padding: 0 14px 0 10px; }
 
+/* 󰇧(nf-md-earth)同类:fonttools 实测墨心偏右 116u≈1.4px(advance 600、ink 到 832),
+   健康态是光杆图标故右偏可见。按 vpn 同法非对称补偿(差 3px→左移~1.5px),总宽仍 24。 */
+#custom-wall { padding: 0 13.5px 0 10.5px; }
+
 #battery.charging { color: #9ece6a; }
 #battery.warning:not(.charging)  { color: #ffc87f; }
 #battery.critical:not(.charging) { color: #f7768e; }
