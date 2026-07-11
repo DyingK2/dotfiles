@@ -17,6 +17,7 @@
   ],
   "modules-right": [
     "network",
+    "custom/wall",
     "custom/tailscale",
     "wireplumber",
     "battery",
@@ -95,6 +96,14 @@
     "tooltip-format-ethernet": "{ifname} · {ipaddr}",
     "tooltip-format-disconnected": "无网络连接",
     "on-click": "kitty -e nmtui"
+  },
+  "custom/wall": {
+    "exec": "~/.config/waybar/scripts/wall-pill.py",
+    "return-type": "json",
+    "interval": 30,
+    "format": "{}",
+    "on-click": "kitty -e ~/.config/waybar/scripts/wall-diag.sh",
+    "tooltip": true
   },
   "custom/tailscale": {
     "exec": "~/.config/waybar/scripts/tailscale-pill.py",

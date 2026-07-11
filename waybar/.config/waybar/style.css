@@ -27,6 +27,7 @@ window#waybar {
 #cpu,
 #window,
 #network,
+#custom-wall,
 #custom-tailscale,
 #wireplumber,
 #battery,
@@ -79,6 +80,7 @@ window#waybar {
 
 /* 网络:健康时安静(常态色),断线才变红——坏了一眼看见 */
 #network.disconnected  { color: #f7768e; }
+#custom-wall.down      { color: #f7768e; }
 #custom-tailscale.down { color: #f7768e; }
 
 /* 󰖂(nf-md-vpn)是 NF(非 Mono)图标,ink 右溢出 advance 框 ~3.8px;在线时是光杆
