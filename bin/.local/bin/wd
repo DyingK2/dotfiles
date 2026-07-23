@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# wd — 快速查词:离线 ECDICT(sdcv)为主,trans 在线兜底。--notify 走 mako 弹出。
+# 取词链:参数 → Wayland 选区 → 剪贴板(≤5词) → fuzzel 输入框(仅 --notify)。
+set -uo pipefail
+
+DATA_DIR="$HOME/.local/share/stardict"
+NOTIFY=0
+[[ "${1:-}" == "--notify" ]] && { NOTIFY=1; shift; }
+
+get_query() {
+    local q="$*"
+    [[ -z "$q" ]] && q="$(wl-paste -p -n 2>/dev/null || true)"
+    if [[ -z "${q// /}" ]]; then
+        q="$(wl-paste -n 2>/dev/null || true)"
+        # 剪贴板兜底防陈旧:超过 5 个词视为噪音
+        (( $(wc -w <<<"$q") > 5 )) && q=""
+    fi
+    if [[ -z "${q// /}" && $NOTIFY -eq 1 ]]; then
+        q="$(fuzzel --dmenu --prompt-only='查词 ' 2>/dev/null || true)"
+    fi
+    sed -E 's/^[[:space:][:punct:]]+//; s/[[:space:][:punct:]]+$//' <<<"$q" | tr -s '[:space:]' ' '
+}
+
+lookup_offline() {  # $1=word;未命中/无 sdcv 返回非零
+    command -v sdcv >/dev/null || return 1
+    sdcv --data-dir "$DATA_DIR" -n --json "$1" 2>/dev/null | python3 -c '
+import json, sys
+r = json.load(sys.stdin)
+if not r: sys.exit(1)
+print(r[0]["definition"].strip())'
+}
+
+lookup_online() {  # $1=text
+    timeout 8 trans -b :zh "$1" 2>/dev/null
+}
+
+show() {  # $1=标题 $2=正文
+    if (( NOTIFY )); then
+        notify-send -t 10000 "$1" "$2"
+    else
+        printf '%s\n%s\n' "$1" "$2"
+    fi
+}
+
+q="$(get_query "$@")"
+q="${q% }"; q="${q# }"
+[[ -z "$q" ]] && exit 0
+
+if [[ "$q" == *' '* ]]; then
+    r="$(lookup_online "$q")"
+    show "$q" "${r:-在线翻译不可达(查网络/节点)}"
+elif r="$(lookup_offline "$q")"; then
+    show "$q" "$r"
+else
+    r="$(lookup_online "$q")"
+    show "$q" "${r:-词典未收录,且在线不可达}"
+fi
