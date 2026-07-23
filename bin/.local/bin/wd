@@ -1,24 +1,41 @@
 #!/usr/bin/env bash
 # wd — 快速查词:离线 ECDICT(sdcv)为主,trans 在线兜底。--notify 走 mako 弹出。
 # 取词链:参数 → Wayland 选区 → 剪贴板(≤5词) → fuzzel 输入框(仅 --notify)。
+# 选区/剪贴板与上次查过的词相同视为「已消费」跳过——Wayland 选区不会因取消选中
+# 而清空,没有这层记忆,「无选中按键」永远查到旧划词、到不了 fuzzel 输入框。
 set -uo pipefail
 
 DATA_DIR="$HOME/.local/share/stardict"
+MEMO="${XDG_RUNTIME_DIR:-/tmp}/wd-last"
 NOTIFY=0
 [[ "${1:-}" == "--notify" ]] && { NOTIFY=1; shift; }
 
+trim() {
+    # 先折叠所有空白(含换行)为单空格,再剥首尾空白/标点;命令替换会吃掉 sed 的结尾换行
+    tr -s '[:space:]' ' ' <<<"$1" | sed -E 's/^[[:space:][:punct:]]+//; s/[[:space:][:punct:]]+$//'
+}
+
 get_query() {
-    local q="$*"
-    [[ -z "$q" ]] && q="$(wl-paste -p -n 2>/dev/null || true)"
-    if [[ -z "${q// /}" ]]; then
-        q="$(wl-paste -n 2>/dev/null || true)"
-        # 剪贴板兜底防陈旧:超过 5 个词视为噪音
-        (( $(wc -w <<<"$q") > 5 )) && q=""
+    local q last=""
+    [[ -f "$MEMO" ]] && last="$(<"$MEMO")"
+    q="$(trim "$*")"
+    if [[ -z "$q" ]]; then
+        q="$(trim "$(wl-paste -p -n 2>/dev/null || true)")"
+        [[ -n "$q" && "$q" == "$last" ]] && q=""
     fi
-    if [[ -z "${q// /}" && $NOTIFY -eq 1 ]]; then
-        q="$(fuzzel --dmenu --prompt-only='查词 ' 2>/dev/null || true)"
+    if [[ -z "$q" ]]; then
+        q="$(trim "$(wl-paste -n 2>/dev/null || true)")"
+        # 防陈旧:这条兜底只为吃 zathura 的英文划词——查过的、含非 ASCII(中文等)、
+        # 或超过 5 个词的剪贴板内容都视为噪音(wc -w 对中文失效,故加 ASCII 闸)
+        if [[ -n "$q" ]] && { [[ "$q" == "$last" || "$q" == *[![:ascii:]]* ]] \
+                              || (( $(wc -w <<<"$q") > 5 )); }; then
+            q=""
+        fi
     fi
-    sed -E 's/^[[:space:][:punct:]]+//; s/[[:space:][:punct:]]+$//' <<<"$q" | tr -s '[:space:]' ' '
+    if [[ -z "$q" && $NOTIFY -eq 1 ]]; then
+        q="$(trim "$(fuzzel --dmenu --prompt-only='查词 ' 2>/dev/null || true)")"
+    fi
+    printf '%s' "$q"
 }
 
 lookup_offline() {  # $1=word;未命中/无 sdcv 返回非零
@@ -34,17 +51,21 @@ lookup_online() {  # $1=text
     timeout 8 trans -b :zh "$1" 2>/dev/null
 }
 
-show() {  # $1=标题 $2=正文
+show() {  # $1=标题 $2=正文;通知端截 20 行防溢出
+    local body="$2"
     if (( NOTIFY )); then
-        notify-send -t 10000 "$1" "$2"
+        local capped
+        capped="$(head -n 20 <<<"$body")"
+        [[ "$capped" != "$body" ]] && capped+=$'\n…'
+        notify-send -a wd -t 10000 "$1" "$capped"
     else
-        printf '%s\n%s\n' "$1" "$2"
+        printf '%s\n%s\n' "$1" "$body"
     fi
 }
 
 q="$(get_query "$@")"
-q="${q% }"; q="${q# }"
 [[ -z "$q" ]] && exit 0
+(( NOTIFY )) && printf '%s' "$q" > "$MEMO"
 
 if [[ "$q" == *' '* ]]; then
     r="$(lookup_online "$q")"

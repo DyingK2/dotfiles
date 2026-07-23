@@ -19,6 +19,10 @@ border-color=#414868
 border-color=#f7768e
 default-timeout=0
 
+[app-name=wd]
+width=400
+height=600
+
 [category=osd]
 default-timeout=1000
 history=0
