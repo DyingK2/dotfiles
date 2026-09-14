@@ -9,6 +9,8 @@
 #     3) 同一 profile 同一时刻只能开在一处,先探 lock 再起,免得只看到「profile cannot be loaded」。
 set -uo pipefail
 
+fail() { echo "claude-web: $*" >&2; [ -t 2 ] || notify-send -a claude-web "claude-web" "$*"; exit 1; }
+
 HOST=boat
 PROFILE="$HOME/.mozilla/claude-pick"
 FF=(firefox --new-instance --profile "$PROFILE")
@@ -18,11 +20,11 @@ CHECK='p=$(readlink ~/.mozilla/claude-pick/lock 2>/dev/null | sed "s/.*+//"); [ 
 
 if [ "$(uname -n)" = "$HOST" ]; then
     pid=$(bash -c "$CHECK")
-    [ -n "$pid" ] && { echo "claude-web: claude-pick 已在本机打开(PID $pid)" >&2; exit 1; }
+    [ -n "$pid" ] && fail "claude-pick 已在本机打开(PID $pid)"
     exec "${FF[@]}" "$@"
 else
     pid=$(ssh -o BatchMode=yes -o ConnectTimeout=5 "$HOST" "$CHECK"); rc=$?
-    [ $rc -eq 255 ] && { echo "claude-web: ssh $HOST 不通(Tailscale 起了吗)" >&2; exit 1; }
-    [ -n "$pid" ] && { echo "claude-web: claude-pick 已在 $HOST 上打开(PID $pid),先关掉那个窗口" >&2; exit 1; }
+    [ $rc -eq 255 ] && fail "ssh $HOST 不通(Tailscale 起了吗)"
+    [ -n "$pid" ] && fail "claude-pick 已在 $HOST 上打开(PID $pid),先关掉那个窗口"
     exec waypipe --compress zstd ssh "$HOST" "${FF[@]}" "$@"
 fi

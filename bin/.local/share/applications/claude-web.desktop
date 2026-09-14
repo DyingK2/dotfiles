@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Claude Web
+Comment=claude.ai 专用 Firefox(claude-pick),进程只在 boat 跑;非 boat 机器经 waypipe 投窗口
+Exec=/home/david/.local/bin/claude-web
+Icon=firefox
+Terminal=false
+Categories=Network;WebBrowser;
+StartupWMClass=firefox
