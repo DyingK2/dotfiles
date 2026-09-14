@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# claude-web — 开 claude.ai 专用的 Firefox(claude-pick profile),进程永远在 boat 上跑:
+#   boat 本机 :直接起本地 Firefox
+#   其他机器 :waypipe 经 Tailscale ssh 把 boat 上的 Firefox 窗口投到当前屏幕
+# 为什么:同一账号只在 boat 一处登录(封号顾虑),别的机器只「看」boat 的窗口;不做流量转发。
+# 坑:1) profile 路径不能带空格——waypipe 交给 ssh 后远端 shell 重切参数,所以走 ~/.mozilla/claude-pick 软链
+#        (→ firefox/3lAHY95J.Profile 3,新版 Firefox 的 Profile Groups 目录,-P 名字找不到它);
+#     2) boat 没装 vulkan-radeon,waypipe 的 dmabuf 通道起不来,--no-gpu 走 shm;装了驱动可去掉;
+#     3) 同一 profile 同一时刻只能开在一处,先探 lock 再起,免得只看到「profile cannot be loaded」。
+set -uo pipefail
+
+HOST=boat
+PROFILE="$HOME/.mozilla/claude-pick"
+FF=(firefox --new-instance --profile "$PROFILE")
+
+# lock 是 "ip:+pid" 软链;pid 活着才算真占用(陈旧 lock Firefox 自己会清)
+CHECK='p=$(readlink ~/.mozilla/claude-pick/lock 2>/dev/null | sed "s/.*+//"); [ -n "$p" ] && kill -0 "$p" 2>/dev/null && echo "$p"; :'
+
+if [ "$(uname -n)" = "$HOST" ]; then
+    pid=$(bash -c "$CHECK")
+    [ -n "$pid" ] && { echo "claude-web: claude-pick 已在本机打开(PID $pid)" >&2; exit 1; }
+    exec "${FF[@]}" "$@"
+else
+    pid=$(ssh -o BatchMode=yes -o ConnectTimeout=5 "$HOST" "$CHECK"); rc=$?
+    [ $rc -eq 255 ] && { echo "claude-web: ssh $HOST 不通(Tailscale 起了吗)" >&2; exit 1; }
+    [ -n "$pid" ] && { echo "claude-web: claude-pick 已在 $HOST 上打开(PID $pid),先关掉那个窗口" >&2; exit 1; }
+    exec waypipe --no-gpu --compress zstd ssh "$HOST" "${FF[@]}" "$@"
+fi
