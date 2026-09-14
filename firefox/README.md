@@ -11,7 +11,7 @@ profile 目录名是随机 hash,stow 够不着,所以每台机**一次性**手�
     ln -sf ../../shared/user.js ~/.mozilla/main/user.js
     rm -rf ~/.mozilla/main/chrome && ln -s ../../shared/chrome ~/.mozilla/main/chrome
 
-`~/.mozilla/claude-pick` 同理是 claude.ai 专用 profile 的别名(见 `bin/claude-web`)。
+`~/.mozilla/claude-pick` 同理是 claude.ai 专用 profile 的别名(见 `bin/claude-web`),它的 user.js/chrome 也链到这里,Sidebery 同装。
 
 注意:userChrome 隐藏了标签栏,**没装 Sidebery 的 profile 别链这份 chrome**。
 Sidebery 设置不在文件里(IndexedDB,绑 profile 内部 UUID),跨机走 Sidebery 设置页的 Export/Import。
