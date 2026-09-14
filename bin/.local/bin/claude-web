@@ -5,7 +5,7 @@
 # 为什么:同一账号只在 boat 一处登录(封号顾虑),别的机器只「看」boat 的窗口;不做流量转发。
 # 坑:1) profile 路径不能带空格——waypipe 交给 ssh 后远端 shell 重切参数,所以走 ~/.mozilla/claude-pick 软链
 #        (→ firefox/3lAHY95J.Profile 3,新版 Firefox 的 Profile Groups 目录,-P 名字找不到它);
-#     2) boat 没装 vulkan-radeon,waypipe 的 dmabuf 通道起不来,--no-gpu 走 shm;装了驱动可去掉;
+#     2) waypipe 的 dmabuf 通道靠 Vulkan,boat 得装 vulkan-radeon(没装时报「Unable to find a Vulkan driver」,可临时 --no-gpu 走 shm);
 #     3) 同一 profile 同一时刻只能开在一处,先探 lock 再起,免得只看到「profile cannot be loaded」。
 set -uo pipefail
 
@@ -24,5 +24,5 @@ else
     pid=$(ssh -o BatchMode=yes -o ConnectTimeout=5 "$HOST" "$CHECK"); rc=$?
     [ $rc -eq 255 ] && { echo "claude-web: ssh $HOST 不通(Tailscale 起了吗)" >&2; exit 1; }
     [ -n "$pid" ] && { echo "claude-web: claude-pick 已在 $HOST 上打开(PID $pid),先关掉那个窗口" >&2; exit 1; }
-    exec waypipe --no-gpu --compress zstd ssh "$HOST" "${FF[@]}" "$@"
+    exec waypipe --compress zstd ssh "$HOST" "${FF[@]}" "$@"
 fi
