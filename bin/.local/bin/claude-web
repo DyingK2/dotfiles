@@ -6,7 +6,8 @@
 # 坑:1) profile 路径不能带空格——waypipe 交给 ssh 后远端 shell 重切参数,所以走 ~/.mozilla/claude-pick 软链
 #        (→ firefox/3lAHY95J.Profile 3,新版 Firefox 的 Profile Groups 目录,-P 名字找不到它);
 #     2) waypipe 的 dmabuf 通道靠 Vulkan,boat 得装 vulkan-radeon(没装时报「Unable to find a Vulkan driver」,可临时 --no-gpu 走 shm);
-#     3) 同一 profile 同一时刻只能开在一处,先探 lock 再起,免得只看到「profile cannot be loaded」。
+#     3) 同一 profile 同一时刻只能开在一处,先探 lock 再起,免得只看到「profile cannot be loaded」;
+#     4) claude-pick 必须脱离 Main 的 Profile Group(见 firefox/README.md),否则每次起它都把 boat 的默认 profile 抢走。
 set -uo pipefail
 
 fail() { echo "claude-web: $*" >&2; [ -t 2 ] || notify-send -a claude-web "claude-web" "$*"; exit 1; }
