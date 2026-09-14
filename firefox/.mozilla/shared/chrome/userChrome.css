@@ -1,0 +1,17 @@
+/* userChrome.css - 隐藏顶部标签栏，配合 Sidebery 使用 */
+
+/* 1. 隐藏主标签栏 */
+#TabsToolbar {
+    visibility: collapse !important;
+}
+
+/* 2. 可选：隐藏侧边栏的标题头 (Sidebar Header) 
+   这样侧边栏上方就不会显示 "Sidebery" 字样，更干净 */
+#sidebar-header {
+    display: none !important;
+}
+
+/* 3. 调整一些间距，让界面更紧凑 (可选) */
+:root {
+    --toolbar-field-focus-border-color: transparent !important;
+}
