@@ -222,6 +222,10 @@ user_pref("layout.word_select.eat_space_to_next_word", false);
 // visit https://github.com/yokoffing/Betterfox/wiki/Common-Overrides
 // visit https://github.com/yokoffing/Betterfox/wiki/Optional-Hardening
 // Enter your personal overrides below this line:
+// 新版侧边栏(Ctrl+Alt+Z 开合的那个);Sidebery 挂在里面,标签由它管,不用 Firefox 自带竖排标签
+user_pref("sidebar.revamp", true);
+user_pref("sidebar.verticalTabs", false);
+user_pref("sidebar.visibility", "hide-on-close");
 
 
 
