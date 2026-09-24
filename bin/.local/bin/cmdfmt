@@ -1,0 +1,339 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.10"
+# ///
+"""把一行很长的 shell 命令排成多行，便于阅读。
+
+默认（通用模式）
+  - 每个以 - / -- 开头的选项另起一行，后面的非选项参数跟在同一行
+  - 在 | && || ; & 处断开，重定向（2>&1、>out 等）单独成行
+  - 每个参数保留原样（包括引号），输出可以直接粘贴执行
+
+--qemu
+  选项名对齐成一列（逗号子参数保持原样在同一行），
+  并把 -append 的内核命令行逐项展开。
+  这种输出只供阅读，不能执行。
+
+用法：
+  vng --dry-run 2>&1 | cmdfmt --qemu
+  cmdfmt < cmd.txt
+  cmdfmt -w 80 cmd.txt
+"""
+import argparse
+import re
+import shlex
+import sys
+
+CONTROL = ('&&', '||', '|&', '|', ';', '&')
+REDIR = re.compile(r'\d*(?:&>>|&>|>>|>&|<&|<<<|<>|>\||>|<)')
+META = set('|&;<> \t\n')
+
+
+# ---------- 词法分析：只负责找出词的边界，词本身保持原样 ----------
+
+def _skip_squote(s, i):
+    j = s.find("'", i + 1)
+    if j < 0:
+        raise ValueError('单引号没有闭合')
+    return j + 1
+
+
+def _skip_ansi_c(s, i):                     # $'...'
+    i += 2
+    while i < len(s):
+        if s[i] == '\\':
+            i += 2
+        elif s[i] == "'":
+            return i + 1
+        else:
+            i += 1
+    raise ValueError("$'...' 没有闭合")
+
+
+def _skip_backtick(s, i):
+    i += 1
+    while i < len(s):
+        if s[i] == '\\':
+            i += 2
+        elif s[i] == '`':
+            return i + 1
+        else:
+            i += 1
+    raise ValueError('反引号没有闭合')
+
+
+def _skip_dquote(s, i):
+    i += 1
+    while i < len(s):
+        c = s[i]
+        if c == '\\':
+            i += 2
+        elif c == '"':
+            return i + 1
+        elif s.startswith('$(', i):
+            i = _skip_group(s, i + 2, ')')
+        elif s.startswith('${', i):
+            i = _skip_group(s, i + 2, '}')
+        elif c == '`':
+            i = _skip_backtick(s, i)
+        else:
+            i += 1
+    raise ValueError('双引号没有闭合')
+
+
+def _skip_group(s, i, close):
+    """i 指向开括号之后的位置，返回配对的闭括号之后的位置。"""
+    opener = '(' if close == ')' else '{'
+    depth = 1
+    while i < len(s):
+        c = s[i]
+        if c == '\\':
+            i += 2
+        elif s.startswith("$'", i):
+            i = _skip_ansi_c(s, i)
+        elif c == "'":
+            i = _skip_squote(s, i)
+        elif c == '"':
+            i = _skip_dquote(s, i)
+        elif c == '`':
+            i = _skip_backtick(s, i)
+        elif s.startswith('$(', i):
+            i = _skip_group(s, i + 2, ')')
+        elif s.startswith('${', i):
+            i = _skip_group(s, i + 2, '}')
+        else:
+            if c == opener:
+                depth += 1
+            elif c == close:
+                depth -= 1
+                if depth == 0:
+                    return i + 1
+            i += 1
+    raise ValueError(f'缺少配对的 {close}')
+
+
+def _scan_word(s, i):
+    while i < len(s):
+        c = s[i]
+        if c == '\\':
+            i += 2
+        elif s.startswith("$'", i):
+            i = _skip_ansi_c(s, i)
+        elif c == "'":
+            i = _skip_squote(s, i)
+        elif c == '"':
+            i = _skip_dquote(s, i)
+        elif c == '`':
+            i = _skip_backtick(s, i)
+        elif s.startswith(('$(', '<(', '>('), i):
+            i = _skip_group(s, i + 2, ')')
+        elif s.startswith('${', i):
+            i = _skip_group(s, i + 2, '}')
+        elif c == '(':                        # 子 shell：整体当成一个词
+            i = _skip_group(s, i + 1, ')')
+        elif c in META:
+            break
+        else:
+            i += 1
+    return min(i, len(s))
+
+
+def tokenize(s):
+    """返回 [(kind, raw)]，kind 取 'word' / 'redir' / 'ctl'，raw 为原文。"""
+    toks = []
+    i, n = 0, len(s)
+    while i < n:
+        c = s[i]
+        if s.startswith('\\\n', i):           # 续行符
+            i += 2
+            continue
+        if c in ' \t':
+            i += 1
+            continue
+        if c == '\n':
+            toks.append(('ctl', '\n'))
+            i += 1
+            continue
+        if c == '#':                          # 注释
+            j = s.find('\n', i)
+            i = n if j < 0 else j
+            continue
+        if not s.startswith(('<(', '>('), i):
+            m = REDIR.match(s, i)
+            if m:
+                toks.append(('redir', m.group()))
+                i = m.end()
+                continue
+            op = next((op for op in CONTROL if s.startswith(op, i)), None)
+            if op:
+                toks.append(('ctl', op))
+                i += len(op)
+                continue
+        j = _scan_word(s, i)
+        toks.append(('word', s[i:j]))
+        i = j
+    return toks
+
+
+# ---------- 排版 ----------
+
+def is_option(w):
+    return w.startswith('-') and w != '-' and not re.fullmatch(r'-\d[\d.]*', w)
+
+
+def is_assign(w):
+    return re.match(r'[A-Za-z_][A-Za-z0-9_]*=', w) is not None
+
+
+def split_segments(toks):
+    """按控制符切成若干条简单命令：[(items, ctl)]。
+
+    items 为 [(kind, text)]；重定向和它的目标合成一个 'redir' 项，保持紧挨。
+    """
+    segs, cur = [], []
+    i = 0
+    while i < len(toks):
+        kind, raw = toks[i]
+        if kind == 'ctl':
+            if cur or raw != '\n':
+                segs.append((cur, raw))
+            cur = []
+        elif kind == 'redir':
+            tgt = toks[i + 1][1] if i + 1 < len(toks) and toks[i + 1][0] == 'word' else ''
+            cur.append(('redir', raw + tgt))
+            i += 1 if tgt else 0
+        else:
+            cur.append(('word', raw))
+        i += 1
+    if cur:
+        segs.append((cur, ''))
+    return segs
+
+
+def group_lines(items):
+    """把一条简单命令分成逻辑行：[[token, ...], ...]。"""
+    lines = [[]]
+    seen_opt = False
+    after_dashdash = False
+    for kind, t in items:
+        cur = lines[-1]
+        if kind == 'redir':
+            lines.append([t])
+        elif after_dashdash:
+            cur.append(t)
+        elif t == '--':
+            lines.append([t])
+            after_dashdash = True
+        elif is_option(t):
+            lines.append([t])
+            seen_opt = True
+        elif seen_opt and is_assign(t) and len(cur) >= 2:
+            lines.append([t])                 # make 风格的 VAR=val
+        else:
+            cur.append(t)
+    return [l for l in lines if l]
+
+
+def wrap(tokens, indent, width, cont=4):
+    """行太长时在词与词之间折行，续行多缩进 cont 格。"""
+    out, line = [], ' ' * indent + tokens[0]
+    for t in tokens[1:]:
+        if len(line) + 1 + len(t) + 2 > width and line.strip():
+            out.append(line)
+            line = ' ' * (indent + cont) + t
+        else:
+            line += ' ' + t
+    out.append(line)
+    return out
+
+
+def layout(items, width):
+    """一条简单命令 -> 物理行列表（不含行尾的反斜杠）。"""
+    flat = ' '.join(t for _, t in items)
+    if len(flat) + 2 <= width:                # 放得下就不拆
+        return [flat]
+    lines = group_lines(items)
+    phys = wrap(lines[0], 0, width)
+    k = 1
+    while k < len(lines):
+        # 连续的、不带值的单个开关（-g -fno-common ...）打包到一起
+        run = []
+        while (k < len(lines) and len(lines[k]) == 1
+               and is_option(lines[k][0]) and lines[k][0] != '--'):
+            run.append(lines[k][0])
+            k += 1
+        if len(run) >= 2:
+            phys += wrap(run, 2, width, cont=0)
+            continue
+        if run:
+            phys.append('  ' + run[0])
+            continue
+        phys += wrap(lines[k], 2, width)
+        k += 1
+    return phys
+
+
+def fmt_generic(segs, width):
+    out = []
+    for items, ctl in segs:
+        phys = layout(items, width)
+        if not phys:
+            continue
+        for p in phys[:-1]:
+            out.append(p + ' \\')
+        last = phys[-1]
+        if ctl == '\n':
+            out.append(last)
+            out.append('')
+        else:
+            out.append(last + (' ' + ctl if ctl else ''))
+    while out and out[-1] == '':
+        out.pop()
+    return '\n'.join(out)
+
+
+def _unquote(t):
+    try:
+        parts = shlex.split(t)
+    except ValueError:
+        return t
+    return parts[0] if len(parts) == 1 else t
+
+
+def fmt_qemu(segs):
+    out = []
+    for items, ctl in segs:
+        for k, toks in enumerate(group_lines(items)):
+            if k == 0:
+                out.append(' '.join(toks))
+                continue
+            opt, rest = toks[0], toks[1:]
+            if opt == '-append' and len(rest) == 1:
+                out.append(f'  {opt}')
+                out += [f'      {p}' for p in shlex.split(_unquote(rest[0]))]
+            else:
+                out.append(f'  {opt:<10} {" ".join(rest)}'.rstrip())
+        if ctl and ctl != '\n':
+            out.append(ctl)
+    return '\n'.join(out)
+
+
+def main():
+    ap = argparse.ArgumentParser(description='把长 shell 命令排成多行')
+    ap.add_argument('file', nargs='?', help='输入文件，默认读 stdin')
+    ap.add_argument('--qemu', action='store_true',
+                    help='QEMU 选项名对齐成列并展开 -append（只供阅读）')
+    ap.add_argument('-w', '--width', type=int, default=100,
+                    help='单行最大宽度，默认 100')
+    a = ap.parse_args()
+
+    text = open(a.file).read() if a.file else sys.stdin.read()
+    try:
+        segs = split_segments(tokenize(text.strip()))
+    except ValueError as e:
+        sys.exit(f'cmdfmt: 解析失败：{e}')
+    print(fmt_qemu(segs) if a.qemu else fmt_generic(segs, a.width))
+
+
+if __name__ == '__main__':
+    main()
