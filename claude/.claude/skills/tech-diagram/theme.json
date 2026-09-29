@@ -1,0 +1,166 @@
+{
+  "fonts": {
+    "sans": {
+      "families": [
+        "Inter",
+        "SF Pro Text",
+        "Helvetica Neue",
+        "Arial"
+      ],
+      "generic": "sans-serif"
+    },
+    "mono": {
+      "families": [
+        "JetBrains Mono",
+        "JetBrainsMono Nerd Font Mono",
+        "SF Mono",
+        "Menlo",
+        "Noto Sans Mono",
+        "DejaVu Sans Mono"
+      ],
+      "generic": "monospace"
+    },
+    "cjk": {
+      "families": [
+        "Noto Sans CJK SC",
+        "Source Han Sans SC",
+        "PingFang SC",
+        "Microsoft YaHei"
+      ],
+      "generic": "sans-serif"
+    }
+  },
+  "size": {
+    "title": 20,
+    "subtitle": 12.5,
+    "eyebrow": 10,
+    "name": 13,
+    "body": 12,
+    "small": 11,
+    "mono": 11.5,
+    "mono_small": 10.5,
+    "tag": 9,
+    "label": 11,
+    "index": 9.5,
+    "caption": 13
+  },
+  "color": {
+    "paper": "#ffffff",
+    "ink": "#1f2430",
+    "ink2": "#454c59",
+    "muted": "#6b7280",
+    "soft": "#a0a6b1",
+    "rule": "#e6e8ec",
+    "line": "#c3c8d0",
+    "stroke": "#b9bfc9",
+    "edge": "#7b8290",
+    "sunken": "#f6f7f9",
+    "zone": "#f8f9fb",
+    "note": "#fbfaf6",
+    "note_rule": "#e9e4d6"
+  },
+  "states": {
+    "accent": {
+      "stroke": "#e8590c",
+      "fill": "#fff3eb",
+      "ink": "#c2410c",
+      "label": "focal",
+      "label_zh": "重点"
+    },
+    "focus": {
+      "stroke": "#2563eb",
+      "fill": "#edf3ff",
+      "ink": "#1d4ed8",
+      "label": "current",
+      "label_zh": "当前"
+    },
+    "changed": {
+      "stroke": "#d97706",
+      "fill": "#fff7db",
+      "ink": "#92400e",
+      "label": "changed in this step",
+      "label_zh": "本步改变"
+    },
+    "new": {
+      "stroke": "#16a34a",
+      "fill": "#ecfaf1",
+      "ink": "#15803d",
+      "label": "added in this step",
+      "label_zh": "本步新增"
+    },
+    "removed": {
+      "stroke": "#dc2626",
+      "fill": "#fdeeee",
+      "ink": "#b91c1c",
+      "label": "removed in this step",
+      "label_zh": "本步移除"
+    },
+    "done": {
+      "stroke": "#c9ced6",
+      "fill": "#f1f3f5",
+      "ink": "#8b93a0",
+      "label": "done",
+      "label_zh": "已处理"
+    },
+    "dim": {
+      "stroke": "#dde1e6",
+      "fill": "#ffffff",
+      "ink": "#a0a6b1",
+      "label": "not involved",
+      "label_zh": "不涉及"
+    },
+    "error": {
+      "stroke": "#dc2626",
+      "fill": "#fdeeee",
+      "ink": "#b91c1c",
+      "label": "error",
+      "label_zh": "错误"
+    }
+  },
+  "tones": {
+    "blue": {
+      "stroke": "#3b82f6",
+      "fill": "#eef4ff",
+      "ink": "#1e4fd6"
+    },
+    "teal": {
+      "stroke": "#14b8a6",
+      "fill": "#e9f8f6",
+      "ink": "#0f766e"
+    },
+    "violet": {
+      "stroke": "#8b5cf6",
+      "fill": "#f3effe",
+      "ink": "#6d28d9"
+    },
+    "amber": {
+      "stroke": "#f59e0b",
+      "fill": "#fff6e5",
+      "ink": "#b45309"
+    },
+    "rose": {
+      "stroke": "#f43f5e",
+      "fill": "#fff0f2",
+      "ink": "#be123c"
+    },
+    "green": {
+      "stroke": "#22c55e",
+      "fill": "#ecfaf1",
+      "ink": "#15803d"
+    },
+    "slate": {
+      "stroke": "#94a3b8",
+      "fill": "#f3f5f8",
+      "ink": "#475569"
+    }
+  },
+  "look": {
+    "margin": 32,
+    "radius": 6,
+    "corner": 8,
+    "stroke_w": 1,
+    "edge_w": 1.25,
+    "arrow": 7,
+    "grid": 4
+  }
+}
