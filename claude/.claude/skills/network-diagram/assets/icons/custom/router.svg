@@ -1,0 +1,6 @@
+<svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg" style="fill-rule:evenodd;">
+  <!-- hand-drawn fallback, used when a theme icon file is missing -->
+  <circle cx="150" cy="150" r="150" style="fill:rgb(255,254,254);"/>
+  <path d="M150,0A150,150 0 1 1 149.9,0ZM150,16A134,134 0 1 0 150.1,16Z" style="fill:rgb(45,103,185);"/>
+  <path d="M48,142H100V120L135,150L100,180V158H48ZM252,142H200V120L165,150L200,180V158H252ZM142,48V100H120L150,135L180,100H158V48ZM142,252V200H120L150,165L180,200H158V252Z" style="fill:rgb(45,103,185);"/>
+</svg>

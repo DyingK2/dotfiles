@@ -1,0 +1,5 @@
+<svg viewBox="0 0 26 22" xmlns="http://www.w3.org/2000/svg">
+  <!-- hand-drawn fallback, used when a theme icon file is missing -->
+  <rect x="1" y="1" width="24" height="15" rx="2" style="fill:none;stroke:rgb(77,77,77);stroke-width:2px;"/>
+  <path d="M9,21H17M13,16V21" style="fill:none;stroke:rgb(77,77,77);stroke-width:2px;"/>
+</svg>

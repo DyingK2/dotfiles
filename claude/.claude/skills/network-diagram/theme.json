@@ -1,0 +1,87 @@
+{
+  "fonts": {
+    "sans": "-apple-system, BlinkMacSystemFont, 'SF Pro Text', Inter, 'PingFang SC', 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif",
+    "mono": "'SF Mono', 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace"
+  },
+  "size": {
+    "title": 17,
+    "name": 13,
+    "body": 12.5,
+    "small": 11.5,
+    "iface": 11,
+    "route": 10.5,
+    "seg": 12
+  },
+  "text": {
+    "title": "#1d1d1f",
+    "body": "#1d1d1f",
+    "muted": "#6e6e73",
+    "iface": "#86868b"
+  },
+  "line": "#b4b4b9",
+  "panel": {
+    "fill": "#f5f5f7",
+    "divider": "#e5e5ea"
+  },
+  "roles": {
+    "uplink": {
+      "color": "#8e8e93",
+      "tint": "#f2f2f7",
+      "ink": "#48484a"
+    },
+    "transit": {
+      "color": "#5856d6",
+      "tint": "#eeeefc",
+      "ink": "#3634a3"
+    },
+    "client": {
+      "color": "#34c759",
+      "tint": "#e9f8ed",
+      "ink": "#1f7a37"
+    },
+    "server": {
+      "color": "#007aff",
+      "tint": "#e6f1ff",
+      "ink": "#0058b9"
+    },
+    "default": {
+      "color": "#8e8e93",
+      "tint": "#f2f2f7",
+      "ink": "#48484a"
+    }
+  },
+  "annot": {
+    "fill": "#f5f5f7",
+    "text": "#3a3a3c",
+    "leader": "#c7c7cc"
+  },
+  "flow": "#0a84ff",
+  "look": {
+    "seg_h": 26,
+    "seg_rx": 13,
+    "card_h": 56,
+    "card_rx": 12,
+    "card_stroke": "#e5e5ea",
+    "corner": 10,
+    "arrow_size": 4.2
+  },
+  "icons": {
+    "router": {
+      "src": "cisco/router.svg",
+      "width": 60,
+      "fallback": "custom/router.svg"
+    },
+    "cloud": {
+      "src": "cisco/cloud.svg",
+      "width": 76,
+      "fallback": "custom/cloud.svg"
+    },
+    "host": {
+      "src": "cisco/pc.svg",
+      "fallback": "custom/host.svg"
+    }
+  },
+  "canvas": {
+    "bg": "#ffffff"
+  }
+}

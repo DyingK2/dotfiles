@@ -1,0 +1,77 @@
+# Topology schema, by example: a Proxmox VE lab with two routers, a client and a server.
+# Render:  uv run scripts/render.py topology.yaml               (L3 portrait, for docs)
+#          uv run scripts/render.py topology.yaml --layout lr   (L3 landscape, for slides)
+#          uv run scripts/render.py topology.yaml --view l2     (L2 host bridge view)
+# Not on Proxmox? Leave out vmid / net / tap / phys-nic — they only feed the L2 view.
+
+meta:
+  title: PVE routing lab          # diagram title
+  host: Proxmox VE                # hypervisor name; L2 frame title and L3 panel
+  version: v0.2
+  date: "2026-09-24"
+  note: Interface names and IPs are examples   # optional, shown muted
+  # lang: en                      # zh | en; default: zh if any text contains CJK, else en
+
+# One entry per L2 broadcast domain (Linux bridge, VLAN, switch).
+# role picks the colour: uplink | transit | client | server; any other word (e.g. other) → neutral grey.
+# label is the human name (LAN, dmz, …). id is shown bold on the bar — a bridge/VLAN name works well.
+segments:
+  - {id: vmbr0, cidr: dhcp,        role: uplink,  label: uplink}     # cidr "dhcp" when unknown / dynamic
+  - {id: vmbr1, cidr: 10.0.1.0/24, role: transit, label: transit}
+  - {id: vmbr2, cidr: 10.0.2.0/24, role: client,  label: client}
+  - {id: vmbr3, cidr: 10.0.3.0/24, role: server,  label: server}
+
+# Things outside the hosts you manage.
+#   kind: cloud     → the root of the L3 drawing (Internet / upstream); exactly one recommended
+#   kind: phys-nic  → a physical NIC bridged into a segment; drawn only in the L2 view
+external:
+  - {id: internet, kind: cloud, label: Internet, seg: vmbr0}
+  - {id: enp1s0, kind: phys-nic, label: Physical NIC, seg: vmbr0}
+
+devices:
+  - id: r801
+    vmid: 801                     # optional; L2 box title "VM 801" and PVE tap names tap801i0…
+    kind: router                  # router | host
+    label: R801 · VM 801          # routers: text before "·" is the short name used in flow captions
+    sub: OpenWrt · edge gateway / NAT   # optional subtitle
+    ifaces:
+      # name: interface inside the guest; ip: address (no /prefix needed) or "dhcp"; net: PVE netX (default net<index>)
+      # tap: override the L2 tap name (default tap<vmid>i<N>)
+      - {name: wan,    net: net0, seg: vmbr0, ip: dhcp}
+      - {name: br-lan, net: net1, seg: vmbr1, ip: 10.0.1.1}
+    # routes: only what is NOT directly connected; "<prefix|default> via <next-hop IP>"; they drive flow paths.
+    # A default route learned by DHCP on the uplink: leave it out (or write "default via dhcp").
+    routes: ["10.0.2.0/23 via 10.0.1.2"]
+    notes:  ["NAT masquerade @ wan"]       # free text, shown with the routes
+
+  - id: r802
+    vmid: 802
+    kind: router
+    label: R802 · VM 802
+    sub: Debian · internal router
+    ifaces:
+      - {name: eth0, net: net0, seg: vmbr1, ip: 10.0.1.2}
+      - {name: eth1, net: net1, seg: vmbr2, ip: 10.0.2.1}
+      - {name: eth2, net: net2, seg: vmbr3, ip: 10.0.3.1}
+    routes: ["default via 10.0.1.1"]
+    notes:  ["ip_forward = 1"]
+
+  - id: vm803
+    vmid: 803
+    kind: host
+    label: VM 803 · client        # hosts: text after "·" (or the whole label) is the short name in captions
+    ifaces:
+      - {name: eth0, net: net0, seg: vmbr2, ip: 10.0.2.10, gw: 10.0.2.1}   # gw = the host's default route
+
+  - id: vm804
+    vmid: 804
+    kind: host
+    label: VM 804 · server
+    ifaces:
+      - {name: eth0, net: net0, seg: vmbr3, ip: 10.0.3.10, gw: 10.0.3.1}
+
+# Test traffic to highlight. The path is computed hop by hop from gw/routes (longest-prefix match);
+# a missing route is an error, which is often exactly the bug you are drawing the diagram to find.
+flows:
+  - {from: vm803, to: vm804, label: "ping / iperf3"}   # label = what the traffic is, not the endpoints
+                                                        # quote values containing "#" or ":"
