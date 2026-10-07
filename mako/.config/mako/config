@@ -30,6 +30,10 @@ history=0
 [mode=do-not-disturb]
 invisible=1
 
-# Claude Desktop 回复完成的系统通知 → 加一声提示音(Claude Code 走自己的 Stop hook)
+# Claude 回复完成的通知 → 加一声提示音(Claude Code 走自己的 Stop hook)
+# Claude = Desktop 应用;claude-web = boat 上 Claude Web 专用 Firefox profile(claude-pick)
 [app-name=Claude]
+on-notify=exec pw-play /usr/share/sounds/freedesktop/stereo/complete.oga
+
+[app-name=claude-web]
 on-notify=exec pw-play /usr/share/sounds/freedesktop/stereo/complete.oga
