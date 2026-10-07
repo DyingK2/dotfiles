@@ -29,3 +29,7 @@ history=0
 
 [mode=do-not-disturb]
 invisible=1
+
+# Claude Desktop 回复完成的系统通知 → 加一声提示音(Claude Code 走自己的 Stop hook)
+[app-name=Claude]
+on-notify=exec pw-play /usr/share/sounds/freedesktop/stereo/complete.oga
