@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Grove
+Comment=Grove 库专用 Obsidian,进程只在 boat 跑;非 boat 机器经 waypipe 投窗口
+Exec=/home/david/.local/bin/obsidian-grove
+Icon=obsidian
+Terminal=false
+Categories=Office;
+StartupWMClass=md.obsidian.Obsidian

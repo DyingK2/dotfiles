@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# obsidian-grove — 开 Grove 库的 Obsidian,进程永远在 boat 上跑:
+#   boat 本机 :直接起本地 Obsidian
+#   其他机器 :waypipe 经 Tailscale ssh 把 boat 上的 Obsidian 窗口投到当前屏幕
+# 为什么:Grove 由 Claude 在 boat 上维护,只留 boat 一份,别的机器不再存副本、不做同步。
+# 坑:1) Electron 单实例——同一 user-data-dir 第二次起会把窗口交给已在跑的那个(可能弹在 boat 屏上),
+#        所以用独立的 ~/.config/obsidian-grove(只装库列表/窗口状态,插件与设置在库内 .obsidian/ 共用),
+#        并且先探进程,同一时刻只开在一处;
+#     2) 必须显式 --ozone-platform=wayland,否则 ssh 环境下 Electron 直接 SIGTRAP 崩掉;
+#     3) 首次起前预置 obsidian.json 只登记 Grove 且 open:true,起来直接进库。
+set -uo pipefail
+
+fail() { echo "obsidian-grove: $*" >&2; [ -t 2 ] || notify-send -a obsidian-grove "obsidian-grove" "$*"; exit 1; }
+
+HOST=boat
+DATA='$HOME/.config/obsidian-grove'
+SEED='{"vaults":{"fe4d8e9618ae11bd":{"path":"'"$HOME"'/Documents/Grove","ts":1787497729945,"open":true}}}'
+PREP="d=$DATA; mkdir -p \"\$d\"; [ -f \"\$d/obsidian.json\" ] || echo '$SEED' > \"\$d/obsidian.json\"; pgrep -f -- \"--user-data-dir=\$d\" | head -1; :"
+OB=(obsidian --ozone-platform=wayland "--user-data-dir=$HOME/.config/obsidian-grove")
+
+if [ "$(uname -n)" = "$HOST" ]; then
+    pid=$(bash -c "$PREP")
+    [ -n "$pid" ] && fail "Grove 已在本机打开(PID $pid)"
+    exec "${OB[@]}" "$@"
+else
+    pid=$(ssh -o BatchMode=yes -o ConnectTimeout=5 "$HOST" "$PREP"); rc=$?
+    [ $rc -eq 255 ] && fail "ssh $HOST 不通(Tailscale 起了吗)"
+    [ -n "$pid" ] && fail "Grove 已在 $HOST 上打开(PID $pid),先关掉那个窗口"
+    exec waypipe --compress zstd ssh "$HOST" "${OB[@]}" "$@"
+fi
