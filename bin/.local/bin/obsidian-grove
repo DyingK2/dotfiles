@@ -7,7 +7,9 @@
 #        所以用独立的 ~/.config/obsidian-grove(只装库列表/窗口状态,插件与设置在库内 .obsidian/ 共用),
 #        并且先探进程,同一时刻只开在一处;
 #     2) 必须显式 --ozone-platform=wayland,否则 ssh 环境下 Electron 直接 SIGTRAP 崩掉;
-#     3) 首次起前预置 obsidian.json 只登记 Grove 且 open:true,起来直接进库。
+#     3) 首次起前预置 obsidian.json 只登记 Grove 且 open:true,起来直接进库;
+#     4) 两机常走 DERP 中继(实测 ≈1.5 MB/s),滚动时整窗像素传不动 → --video h264 把 dmabuf 硬编成视频流
+#        (boat radeonsi VA-API 编、matebook iHD 解),文字边缘可能略有压缩痕迹。
 set -uo pipefail
 
 fail() { echo "obsidian-grove: $*" >&2; [ -t 2 ] || notify-send -a obsidian-grove "obsidian-grove" "$*"; exit 1; }
@@ -26,5 +28,5 @@ else
     pid=$(ssh -o BatchMode=yes -o ConnectTimeout=5 "$HOST" "$PREP"); rc=$?
     [ $rc -eq 255 ] && fail "ssh $HOST 不通(Tailscale 起了吗)"
     [ -n "$pid" ] && fail "Grove 已在 $HOST 上打开(PID $pid),先关掉那个窗口"
-    exec waypipe --compress zstd ssh "$HOST" "${OB[@]}" "$@"
+    exec waypipe --compress zstd --video h264 ssh "$HOST" "${OB[@]}" "$@"
 fi
