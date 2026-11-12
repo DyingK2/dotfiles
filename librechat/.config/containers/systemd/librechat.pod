@@ -1,0 +1,8 @@
+# LibreChat:聊天前端(中转 Claude API)。设计见 atelier efforts/2026-11-12-librechat/
+# 两个容器共用一个 pod 的网络命名空间:mongo 只听 pod 内 127.0.0.1,不对外。
+[Pod]
+PodName=librechat
+# 只绑本机回环;将来要给 matebook/手机,用 tailscale serve 转发,不改这里
+PublishPort=127.0.0.1:3080:3080
+# 容器内进程 = 宿主 uid 1000,数据目录归属不乱
+UserNS=keep-id
