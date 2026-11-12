@@ -5,5 +5,5 @@ cache: true
 endpoints:
   anthropic:
     titleConvo: true
-    # 中转站若有 haiku 可换成它省钱;未验证前先用主模型
-    titleModel: claude-opus-5-5
+    # 标题用 haiku 省钱;中转站 2026-11-12 实测有 claude-haiku-5-5
+    titleModel: claude-haiku-5-5
