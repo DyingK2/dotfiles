@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+# throttle — boat 的浏览器限速开关(防别人刷 YouTube 烧机场流量)。
+#   throttle on [KB/s]   开限速,默认 8 KB/s(几乎不可用;要 sudo 密码,别人拨不动)
+#   throttle off         关限速
+#   throttle status      看开关状态 + 哪些浏览器在/不在限速范围
+# 机制:本包的 .desktop 覆盖让 Firefox/Chromium/Chrome 一律在 throttle.slice 里启动(平时不限);
+#   开关只增删 nft 表 `inet throttle`——output 给该 slice 的连接打 ct mark 位,input 回包超速即丢。
+#   不能在网卡上限:所有流量先进 Clash 的 Meta TUN,出网卡时已全是 mihomo 的包。
+# 局限:开着时国内站也一样慢(Clash 前分不出直连/代理);nft 表不持久,重启即关;
+#   从终端裸敲 firefox 能绕开;开关前已在跑的浏览器要整个重启才进 slice(status 会列出来)。
+set -euo pipefail
+
+SLICE=throttle.slice
+CG="user.slice/user-$(id -u).slice/user@$(id -u).service/$SLICE"   # level 4
+MARK=0x10000000                     # 只用 ct mark 的一位,不覆盖别人(Clash/Tailscale)的 mark
+DEFAULT_RATE=8                      # KB/s
+
+die() { echo "throttle: $*" >&2; exit 1; }
+
+# 不在 throttle.slice 里的浏览器主进程(claude-web 的 claude-pick 是自己的,不算)
+strays() {
+    local pid
+    for pid in $(pgrep -x 'firefox|chromium|chrome' || true); do
+        grep -q "/$SLICE/" "/proc/$pid/cgroup" 2>/dev/null && continue
+        tr '\0' ' ' <"/proc/$pid/cmdline" 2>/dev/null | grep -q claude-pick && continue
+        # 只报树根:父进程也是浏览器的(Chrome 的 zygote/子进程)跳过
+        pgrep -x 'firefox|chromium|chrome' | grep -qx "$(ps -o ppid= -p "$pid" | tr -d ' ')" && continue
+        echo "  PID $pid  $(ps -o args= -p "$pid" | cut -c1-80)"
+    done
+}
+
+warn_strays() {
+    local s; s=$(strays)
+    [ -z "$s" ] && return
+    echo "注意:下面这些浏览器不在限速范围(开关之前启动的),整个关掉重开才生效:"
+    echo "$s"
+}
+
+case "${1:-status}" in
+on)
+    rate=${2:-$DEFAULT_RATE}
+    [[ $rate =~ ^[1-9][0-9]*$ ]] || die "速率要正整数(KB/s),收到:$rate"
+    systemctl --user start "$SLICE"   # nft 按路径解析 cgroup,slice 必须先存在
+    # 先建再删再建:无论之前开没开,都原子地换成新速率
+    sudo nft -f - <<EOF
+table inet throttle
+delete table inet throttle
+table inet throttle {
+    chain out {
+        type filter hook output priority mangle; policy accept;
+        socket cgroupv2 level 4 "$CG" ct mark set ct mark or $MARK
+    }
+    chain in {
+        type filter hook input priority mangle; policy accept;
+        ct mark and $MARK == $MARK limit rate over $rate kbytes/second burst $((rate * 2)) kbytes drop
+    }
+}
+EOF
+    echo "限速已开:浏览器下行 ≤ $rate KB/s"
+    warn_strays
+    ;;
+off)
+    if sudo nft delete table inet throttle 2>/dev/null; then
+        echo "限速已关"
+    else
+        echo "本来就没开"
+    fi
+    ;;
+status)
+    if rule=$(sudo nft list table inet throttle 2>/dev/null); then
+        echo "限速:开($(grep -o '[0-9]* kbytes/second' <<<"$rule" | head -1))"
+    else
+        echo "限速:关"
+    fi
+    warn_strays
+    ;;
+*)
+    sed -n '2,5p' "$0" | sed 's/^# \{0,1\}//'
+    exit 2
+    ;;
+esac
